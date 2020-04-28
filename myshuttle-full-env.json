@@ -1,0 +1,458 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "administratorLogin": {
+            "type": "string"
+        },
+        "administratorLoginPassword": {
+            "type": "securestring"
+        },
+        "MyShuttleDBPasswordForTest": {
+            "type": "securestring"
+        },
+        "databaseName": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "serverName": {
+            "type": "string"
+        },
+        "skuCapacity": {
+            "type": "int"
+        },
+        "skuFamily": {
+            "type": "string"
+        },
+        "skuName": {
+            "type": "string"
+        },
+        "skuSizeMB": {
+            "type": "int"
+        },
+        "skuTier": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string"
+        },
+        "backupRetentionDays": {
+            "type": "int"
+        },
+        "geoRedundantBackup": {
+            "type": "string"
+        },
+        "previewFeature": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "tags": {
+            "type": "object",
+            "defaultValue": {}
+        },
+        "storageAutoGrow": {
+            "type": "string",
+            "defaultValue": "Disabled"
+        },
+        "infrastructureEncryption": {
+            "type": "string",
+            "defaultValue": "Disabled"
+        },
+        "MyShuttleHostingPlanSKU": {
+            "type": "string",           
+            "defaultValue": "Standard"
+        },
+        "MyShuttleHostingPlanWorkerSize": {
+            "type": "string",           
+            "defaultValue": "0"
+        },
+        "EnableRules": {
+            "type": "bool",
+            "defaultValue": false
+        }      
+    },
+    "variables": {
+        "UniqueName": "[uniqueString(resourceGroup().name)]",
+        "MyShuttleServerName": "[concat('mysql-', variables('UniqueName'), '-prod')]",
+        "MyShuttleServerNameDev": "[concat('mysql-', variables('UniqueName'), '-dev')]",
+        "MyShuttleServerNameStage": "[concat('mysql-', variables('UniqueName'), '-stage')]",
+        "MyShuttleSiteName": "[concat('myshuttle-', variables('UniqueName'))]",
+        "MyShuttleHostingPlanName": "[concat(variables('UniqueName'), '-plan')]"
+    },
+    "resources": [
+        {
+            "name": "[variables('MyShuttleServerName')]",
+            "type": "Microsoft.DBforMySQL/servers",
+            "apiVersion": "2017-12-01",
+            "sku": {
+                "name": "[parameters('skuName')]",
+                "tier": "[parameters('skuTier')]",
+                "capacity": "[parameters('skuCapacity')]",
+                "size": "[parameters('skuSizeMB')]",
+                "family": "[parameters('skuFamily')]"
+            },
+            "properties": {
+                "version": "[parameters('version')]",
+                "createMode": "Default",
+                "administratorLogin": "[parameters('administratorLogin')]",
+                "administratorLoginPassword": "[parameters('administratorLoginPassword')]",
+                "storageProfile": {
+                    "storageMB": "[parameters('skuSizeMB')]",
+                    "backupRetentionDays": "[parameters('backupRetentionDays')]",
+                    "geoRedundantBackup": "[parameters('geoRedundantBackup')]",
+                    "storageAutoGrow": "[parameters('storageAutoGrow')]"
+                },
+                "sslEnforcement": "Disabled",
+                "infrastructureEncryption": "[parameters('infrastructureEncryption')]"
+            },
+            "location": "[parameters('location')]",
+            "tags": "[parameters('tags')]",
+            "resources": [
+                {
+                    "name": "[parameters('databaseName')]",
+                    "type": "databases",
+                    "apiVersion": "2017-12-01",
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('MyShuttleServerName'))]"
+                    ]
+                },
+                {
+                    "type": "firewallRules",
+                    "apiVersion": "2017-12-01",
+                    "name": "AllowAzureIps",
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('MyShuttleServerName'))]"
+                    ],
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "0.0.0.0"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "[variables('MyShuttleServerNameDev')]",
+            "type": "Microsoft.DBforMySQL/servers",
+            "apiVersion": "2017-12-01",
+            "sku": {
+                "name": "[parameters('skuName')]",
+                "tier": "[parameters('skuTier')]",
+                "capacity": "[parameters('skuCapacity')]",
+                "size": "[parameters('skuSizeMB')]",
+                "family": "[parameters('skuFamily')]"
+            },
+            "properties": {
+                "version": "[parameters('version')]",
+                "createMode": "Default",
+                "administratorLogin": "[parameters('administratorLogin')]",
+                "administratorLoginPassword": "[parameters('MyShuttleDBPasswordForTest')]",
+                "storageProfile": {
+                    "storageMB": "[parameters('skuSizeMB')]",
+                    "backupRetentionDays": "[parameters('backupRetentionDays')]",
+                    "geoRedundantBackup": "[parameters('geoRedundantBackup')]",
+                    "storageAutoGrow": "[parameters('storageAutoGrow')]"
+                },
+                "sslEnforcement": "Disabled",
+                "infrastructureEncryption": "[parameters('infrastructureEncryption')]"
+            },
+            "location": "[parameters('location')]",
+            "tags": "[parameters('tags')]",
+            "resources": [
+                {
+                    "name": "[parameters('databaseName')]",
+                    "type": "databases",
+                    "apiVersion": "2017-12-01",
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('MyShuttleServerNameDev'))]"
+                    ]
+                },
+                {
+                    "type": "firewallRules",
+                    "apiVersion": "2017-12-01",
+                    "name": "AllowAzureIps",
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('MyShuttleServerNameDev'))]"
+                    ],
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "0.0.0.0"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "[variables('MyShuttleServerNameStage')]",
+            "type": "Microsoft.DBforMySQL/servers",
+            "apiVersion": "2017-12-01",
+            "sku": {
+                "name": "[parameters('skuName')]",
+                "tier": "[parameters('skuTier')]",
+                "capacity": "[parameters('skuCapacity')]",
+                "size": "[parameters('skuSizeMB')]",
+                "family": "[parameters('skuFamily')]"
+            },
+            "properties": {
+                "version": "[parameters('version')]",
+                "createMode": "Default",
+                "administratorLogin": "[parameters('administratorLogin')]",
+                "administratorLoginPassword": "[parameters('MyShuttleDBPasswordForTest')]",
+                "storageProfile": {
+                    "storageMB": "[parameters('skuSizeMB')]",
+                    "backupRetentionDays": "[parameters('backupRetentionDays')]",
+                    "geoRedundantBackup": "[parameters('geoRedundantBackup')]",
+                    "storageAutoGrow": "[parameters('storageAutoGrow')]"
+                },
+                "sslEnforcement": "Disabled",
+                "infrastructureEncryption": "[parameters('infrastructureEncryption')]"
+            },
+            "location": "[parameters('location')]",
+            "tags": "[parameters('tags')]",
+            "resources": [
+                {
+                    "name": "[parameters('databaseName')]",
+                    "type": "databases",
+                    "apiVersion": "2017-12-01",
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('MyShuttleServerNameStage'))]"
+                    ]
+                },
+                {
+                    "type": "firewallRules",
+                    "apiVersion": "2017-12-01",
+                    "name": "AllowAzureIps",
+                    "dependsOn": [
+                        "[concat('Microsoft.DBforMySQL/servers/', variables('MyShuttleServerNameStage'))]"
+                    ],
+                    "properties": {
+                        "startIpAddress": "0.0.0.0",
+                        "endIpAddress": "0.0.0.0"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "[concat(variables('MyShuttleSiteName'), '-Insights')]",
+            "type": "Microsoft.Insights/components",
+            "location": "[parameters('location')]",
+            "apiVersion": "2014-04-01",
+            "tags": {
+                "displayName": "insightsComponents"
+            },
+            "properties": {
+                "ApplicationId": "[concat(variables('MyShuttleSiteName'), '-Insights')]"
+            }
+        },
+        {
+            "name": "[concat(variables('MyShuttleSiteName'), '-DevInsights')]",
+            "type": "Microsoft.Insights/components",
+            "location": "[parameters('location')]",
+            "apiVersion": "2014-04-01",
+            "tags": {
+                "displayName": "insightsComponents"
+            },
+            "properties": {
+                "ApplicationId": "[concat(variables('MyShuttleSiteName'), '-DevInsights')]"
+            }
+        },
+        {
+            "name": "[concat(variables('MyShuttleSiteName'), '-StagingInsights')]",
+            "type": "Microsoft.Insights/components",
+            "location": "[parameters('location')]",
+            "apiVersion": "2014-04-01",
+            "tags": {
+                "displayName": "insightsComponents"
+            },
+            "properties": {
+                "ApplicationId": "[concat(variables('MyShuttleSiteName'), '-StagingInsights')]"
+            }
+        },
+        {
+            "name": "[variables('MyShuttleHostingPlanName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "location": "[parameters('location')]",
+            "apiVersion": "2014-06-01",
+            "dependsOn": [ ],
+            "tags": {
+                "displayName": "MyShuttleHostingPlan"
+            },
+            "properties": {
+                "name": "[variables('MyShuttleHostingPlanName')]",
+                "sku": "[parameters('MyShuttleHostingPlanSKU')]",
+                "workerSize": "[parameters('MyShuttleHostingPlanWorkerSize')]",
+                "numberOfWorkers": 1
+            }
+        },
+        {
+            "name": "[concat(variables('MyShuttleHostingPlanName'), '-', resourceGroup().name)]",
+            "type": "Microsoft.Insights/autoscalesettings",
+            "location": "[parameters('location')]",
+            "apiVersion": "2014-04-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('MyShuttleHostingPlanName'))]"
+            ],
+            "tags": {
+                "[concat('hidden-link:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('MyShuttleHostingPlanName'))]": "Resource",
+                "displayName": "WebsiteHostingPlanAutoScale"
+            },
+            "properties": {
+                "name": "[concat(variables('MyShuttleHostingPlanName'), '-', resourceGroup().name)]",
+                "profiles": [
+                    {
+                        "name": "Default",
+                        "capacity": {
+                            "minimum": "1",
+                            "maximum": "4",
+                            "default": "1"
+                        },
+                        "rules": [
+                            {
+                                "metricTrigger": {
+                                    "metricName": "CpuPercentage",
+                                    "metricResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('MyShuttleHostingPlanName'))]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT10M",
+                                    "timeAggregation": "Average",
+                                    "operator": "GreaterThan",
+                                    "threshold": 80
+                                },
+                                "scaleAction": {
+                                    "direction": "Increase",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT10M"
+                                }
+                            },
+                            {
+                                "metricTrigger": {
+                                    "metricName": "CpuPercentage",
+                                    "metricResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('MyShuttleHostingPlanName'))]",
+                                    "timeGrain": "PT1M",
+                                    "statistic": "Average",
+                                    "timeWindow": "PT1H",
+                                    "timeAggregation": "Average",
+                                    "operator": "LessThan",
+                                    "threshold": 60
+                                },
+                                "scaleAction": {
+                                    "direction": "Decrease",
+                                    "type": "ChangeCount",
+                                    "value": "1",
+                                    "cooldown": "PT1H"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "enabled": "[parameters('EnableRules')]",
+                "targetResourceUri": "[concat(resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('MyShuttleHostingPlanName'))]"
+            }
+        },
+        {
+            "name": "[variables('MyShuttleSiteName')]",
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-11-01",
+            "kind": "string",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', variables('MyShuttleHostingPlanName'))]",
+                "[resourceId('Microsoft.DBforMySQL/servers', variables('MyShuttleServerName'))]",
+                "[resourceId('Microsoft.DBforMySQL/servers', variables('MyShuttleServerNameDev'))]",
+                "[resourceId('Microsoft.DBforMySQL/servers', variables('MyShuttleServerNameStage'))]",
+                "[resourceId('Microsoft.Insights/components', concat(variables('MyShuttleSiteName'), '-Insights'))]",
+                "[resourceId('Microsoft.Insights/components', concat(variables('MyShuttleSiteName'), '-DevInsights'))]",
+                "[resourceId('Microsoft.Insights/components', concat(variables('MyShuttleSiteName'), '-StagingInsights'))]"
+            ],
+            "location": "[parameters('location')]",
+            "tags": {
+                "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('MyShuttleHostingPlanName'))]": "Resource",
+                "displayName": "MyShuttleWebsite"
+            },
+            "properties": {
+                "name": "[variables('MyShuttleSiteName')]",
+                "serverFarmId": "[variables('MyShuttleHostingPlanName')]",
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "Keys:ApplicationInsights:InstrumentationKey",
+                            "value": "[reference(concat('Microsoft.Insights/components/', variables('MyShuttleSiteName'), '-Insights')).InstrumentationKey]"
+                        }
+                    ],
+                    "connectionStrings": [
+                        {
+                            "name": "MyShuttleDb",
+                            "ConnectionString": "[concat('jdbc:mysql://', reference(resourceId('Microsoft.DBforMySQL/servers', variables('MyShuttleServerName'))).fullyQualifiedDomainName, ':3306/', parameters('databaseName'), '?useSSL=true&requireSSL=false&autoReconnect=true&user=', parameters('administratorLogin'),'@', variables('MyShuttleServerName'), '&password=',parameters('administratorLoginPassword'))]",
+                            "type": "MySql"
+                        }
+                    ],
+                    "javaVersion": "1.8",
+                    "javaContainer": "TOMCAT",
+                    "javaContainerVersion": "9.0"
+                }
+            },
+            "resources": [
+                {
+                    "name": "Dev",
+                    "type": "slots",
+                    "location": "[parameters('location')]",
+                    "apiVersion": "2018-11-01",
+                    "kind": "string",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', variables('MyShuttleSiteName'))]"
+                    ],
+                    "properties": {
+                        "siteConfig": {
+                            "appSettings": [
+                                {
+                                    "name": "Keys:ApplicationInsights:InstrumentationKey",
+                                    "value": "[reference(concat('Microsoft.Insights/components/', variables('MyShuttleSiteName'), '-DevInsights')).InstrumentationKey]"
+                                }
+                            ],
+                            "connectionStrings": [
+                                {
+                                    "name": "MyShuttleDb",
+                                    "ConnectionString": "[concat('jdbc:mysql://', reference(resourceId('Microsoft.DBforMySQL/servers',variables('MyShuttleServerNameDev'))).fullyQualifiedDomainName, ':3306/', parameters('databaseName'), '?useSSL=true&requireSSL=false&autoReconnect=true&user=', parameters('administratorLogin'),'@', variables('MyShuttleServerName'), '&password=',parameters('MyShuttleDBPasswordForTest'))]",
+                                    "type": "MySql"
+                                }
+                            ],
+                            "javaVersion": "1.8",
+                            "javaContainer": "TOMCAT",
+                            "javaContainerVersion": "9.0"
+                        }
+                    }
+                },
+                {
+                    "name": "Staging",
+                    "type": "slots",
+                    "location": "[parameters('location')]",
+                    "apiVersion": "2018-11-01",
+                    "kind": "string",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', variables('MyShuttleSiteName'))]"
+                    ],
+                    "properties": {
+                        "siteConfig": {
+                            "appSettings": [
+                                {
+                                    "name": "Keys:ApplicationInsights:InstrumentationKey",
+                                    "value": "[reference(concat('Microsoft.Insights/components/', variables('MyShuttleSiteName'), '-StagingInsights')).InstrumentationKey]"
+                                }
+                            ],
+                            "connectionStrings": [
+                                {
+                                    "name": "MyShuttleDb",
+                                    "ConnectionString": "[concat('jdbc:mysql://', reference(resourceId('Microsoft.DBforMySQL/servers',variables('MyShuttleServerNameStage'))).fullyQualifiedDomainName, ':3306/', parameters('databaseName'), '?useSSL=true&requireSSL=false&autoReconnect=true&user=', parameters('administratorLogin'),'@', variables('MyShuttleServerName'), '&password=',parameters('MyShuttleDBPasswordForTest'))]",
+                                    "type": "MySql"
+                                }
+                            ],
+                            "javaVersion": "1.8",
+                            "javaContainer": "TOMCAT",
+                            "javaContainerVersion": "9.0"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

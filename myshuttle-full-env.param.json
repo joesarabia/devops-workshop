@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "serverName": {
+            "value": "calpers-java"
+        },
+        "databaseName": {
+            "value": "alm"
+        },
+        "location": {
+            "value": "westus"
+        },
+        "skuName": {
+            "value": "B_Gen5_2"
+        },
+        "skuTier": {
+            "value": "Basic"
+        },
+        "skuCapacity": {
+            "value": 2
+        },
+        "skuFamily": {
+            "value": "Gen5"
+        },
+        "skuSizeMB": {
+            "value": 5120
+        },
+        "backupRetentionDays": {
+            "value": 7
+        },
+        "geoRedundantBackup": {
+            "value": "Disabled"
+        },
+        "storageAutoGrow": {
+            "value": "Enabled"
+        },
+        "tags": {
+            "value": {
+                "calpers-devops-workshop": "true"
+            }
+        },
+        "infrastructureEncryption": {
+            "value": "Disabled"
+        },
+        "administratorLogin": {
+            "value": "mysqladmin"
+        },
+        "administratorLoginPassword": {
+            "value": ""
+        },
+       "MyShuttleDBPasswordForTest": {
+            "value": ""
+       },
+        "previewFeature": {
+            "value": ""
+        },
+        "version": {
+            "value": "5.7"
+        },
+        "MyShuttleHostingPlanSKU": {
+            "value": "Standard"
+        },
+        "MyShuttleHostingPlanWorkerSize": {
+            "value": "0"
+        }
+    }
+}
