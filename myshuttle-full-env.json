@@ -71,10 +71,13 @@
         "EnableRules": {
             "type": "bool",
             "defaultValue": false
-        }      
+        },
+        "StudentName": {
+            "type": "string"
+        }     
     },
     "variables": {
-        "UniqueName": "[uniqueString(resourceGroup().name)]",
+        "UniqueName": "[parameters('StudentName')]",
         "MyShuttleServerName": "[concat('mysql-', variables('UniqueName'), '-prod')]",
         "MyShuttleServerNameDev": "[concat('mysql-', variables('UniqueName'), '-dev')]",
         "MyShuttleServerNameStage": "[concat('mysql-', variables('UniqueName'), '-stage')]",

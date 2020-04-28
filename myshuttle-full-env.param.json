@@ -63,6 +63,9 @@
         },
         "MyShuttleHostingPlanWorkerSize": {
             "value": "0"
+        },
+        "StudentName": {
+            "value": ""
         }
     }
 }
